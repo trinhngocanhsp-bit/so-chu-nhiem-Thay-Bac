@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
+    
     <script> const MA_DU_LIEU = "11A6"; </script>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -32,7 +32,7 @@
         .nav-bar-grid { grid-template-columns: repeat(2, 1fr) !important; }
         .modern-banner-wrapper { padding: 12px 8px !important; }
         .col-group { width: 140px !important; padding: 4px !important; }
-        .seat-box { width: 60px !important; height: 45px !important; }
+       .seat-box { height: 48px !important; min-width: 55px !important; }
         .seat-name { font-size: 0.55rem !important; }
         .search-controls { flex-direction: column; align-items: stretch !important; }
         .search-controls select, .search-controls button { width: 100% !important; margin-bottom: 6px; }
@@ -1916,45 +1916,75 @@ function createSeatingGridHTML(isAdmin) {
         let name = stt ? STATE.students[stt - 1] : "";
         let role = stt ? (STATE.positions[stt] || "") : "";
         
-        // CẢI TIẾN: Cho huy hiệu chức vụ nổi lên viền trên (top: -8px), không chiếm chỗ của tên
-        let roleBadge = role ? `<div style="position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:0.55rem; color:#fff; background:#ef4444; border-radius:10px; padding:2px 8px; font-weight:bold; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.2); z-index:5;">${role}</div>` : '';
+        let roleBadge = role 
+            ? `<div style="position:absolute; top:-9px; left:50%; transform:translateX(-50%); font-size:0.55rem; color:#fff; background:#ef4444; border-radius:10px; padding:2px 8px; font-weight:bold; white-space:nowrap; box-shadow:0 1px 3px rgba(0,0,0,0.25); z-index:5;">${role}</div>` 
+            : '';
         
         let extraClass = !stt ? 'empty-seat' : '';
         let onclick = isAdmin ? `onclick="window.selectSeatForSwap(${p})"` : '';
         
-        // CẢI TIẾN: Thiết lập min-width và hiển thị giữa trung tâm
         return `
-        <div class="seat-box ${extraClass}" id="seat-${isAdmin?'admin':'public'}-${p}" ${onclick} style="position:relative; margin-top:8px; border:2px solid #94a3b8; box-shadow:0 1px 3px rgba(0,0,0,0.05); width: 100%; min-width: 65px; max-width: 80px; height: 50px; display:flex; align-items:center; justify-content:center;">
+        <div class="seat-box ${extraClass}" id="seat-${isAdmin?'admin':'public'}-${p}" ${onclick} 
+             style="position:relative; margin-top:9px; border:2px solid #475569; box-shadow:0 1px 3px rgba(0,0,0,0.08); 
+                    width: 100%; height: 52px; display:flex; align-items:center; justify-content:center; 
+                    background:#ffffff; border-radius:8px;">
             ${roleBadge}
-            <div class="seat-name" style="text-align:center; font-size:0.6rem; width:100%; padding: 0 2px;">${name || "Trống"}</div>
+            <div class="seat-name" style="text-align:center; font-size:0.62rem; font-weight:700; color:#0f172a; width:100%; padding: 0 3px; line-height:1.15;">${name || "Trống"}</div>
         </div>`;
     };
 
-    const renderGroupColumn = (groupTitle, groupClass, pList) => {
-        let seatsHTML = '';
-        for (let i = 0; i < pList.length; i += 2) {
-            seatsHTML += `<div style="display:flex; gap:6px; justify-content:center; margin-bottom:6px;">${renderSeat(pList[i])}${pList[i+1] ? renderSeat(pList[i+1]) : ''}</div>`;
-        }
-        return `
-        <div class="${groupClass}" style="flex: 1; min-width: 150px; padding: 10px; border-radius: 10px; background: #ffffff; display: flex; flex-direction: column;">
-            <div style="text-align:center; font-weight:900; font-size:0.85rem; text-transform:uppercase; margin-bottom:12px; padding:4px; border-radius:6px; background:rgba(0,0,0,0.04);">${groupTitle}</div>
-            ${seatsHTML}
-        </div>`;
-    };
-
-    let cols = {
+    let toPositions = {
         1: [1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45],
         2: [2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46],
         3: [3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47],
         4: [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48]
     };
 
-    html += `<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%;">`;
-    for (let c = 1; c <= 4; c++) {
-        let groupId = labelSwap[c] || c; 
-        html += renderGroupColumn("Tổ " + groupId, "group-tto-" + groupId, cols[c]);
-    }
+    const renderToBlock = (toCol) => {
+        let groupId = labelSwap[toCol] || toCol;
+        let positions = toPositions[toCol];
+        
+        let seatsHTML = '';
+        for (let r = 0; r < 3; r++) {
+            seatsHTML += '<div style="display:flex; gap:5px; justify-content:center; margin-bottom:5px;">';
+            for (let c = 0; c < 4; c++) {
+                let idx = r * 4 + c;
+                seatsHTML += `<div style="flex:1; min-width:0;">${renderSeat(positions[idx])}</div>`;
+            }
+            seatsHTML += '</div>';
+        }
+        
+        return `
+        <div class="group-tto-${groupId}" style="padding: 12px 10px 10px 10px; border-radius: 12px; margin-bottom: 12px;">
+            <div style="text-align:center; font-weight:900; font-size:0.9rem; text-transform:uppercase; margin-bottom:14px; padding:5px; border-radius:6px; background:rgba(0,0,0,0.08); letter-spacing:0.5px;">Tổ ${groupId}</div>
+            ${seatsHTML}
+        </div>`;
+    };
+
+    html += `<div style="display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; width: 100%; align-items: stretch;">`;
+    
+    html += `
+    <div style="flex: 1; min-width: 340px; display: flex; flex-direction: column; 
+                background:#ffffff; border:2px solid #cbd5e1; border-radius:14px; padding:10px;">
+        <div style="text-align:center; font-weight:900; font-size:1.05rem; color:#1e40af; 
+                    margin-bottom:10px; padding:8px; background:linear-gradient(135deg,#dbeafe,#bfdbfe); 
+                    border-radius:8px; border:1.5px solid #93c5fd; letter-spacing:2px;">DÃY 1</div>
+        ${renderToBlock(1)}
+        ${renderToBlock(3)}
+    </div>`;
+    
+    html += `
+    <div style="flex: 1; min-width: 340px; display: flex; flex-direction: column; 
+                background:#ffffff; border:2px solid #cbd5e1; border-radius:14px; padding:10px;">
+        <div style="text-align:center; font-weight:900; font-size:1.05rem; color:#1e40af; 
+                    margin-bottom:10px; padding:8px; background:linear-gradient(135deg,#dbeafe,#bfdbfe); 
+                    border-radius:8px; border:1.5px solid #93c5fd; letter-spacing:2px;">DÃY 2</div>
+        ${renderToBlock(2)}
+        ${renderToBlock(4)}
+    </div>`;
+    
     html += `</div>`;
+    
     return html;
 }
         window.renderSeatingMap = function() {
@@ -2882,8 +2912,10 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 
+
 // 2. Hàm hiển thị lịch trực ra ngoài Trang chủ (Tab 1) theo hàng dọc, lọc bỏ số thứ tự
 // =========================================================
+// 1. HÀM LƯU DỮ LIỆU (Có bọc chống lỗi)
 // =========================================================
 // HÀM LƯU PHÂN CÔNG TRỰC NHẬT (ĐÃ FIX LỖI MẤT DỮ LIỆU)
 // =========================================================
@@ -2937,6 +2969,7 @@ window.savedDutyData = function(isAutoSave = false) {
         if (!isAutoSave) alert("❌ Có lỗi xảy ra khi lưu: " + err.message);
     }
 };
+// =========================================================
 // 2. HÀM HIỂN THỊ RA TRANG CHỦ (Hàng dọc, bỏ số, màu đẹp)
 // =========================================================
  window.renderPublicDuty = function() {
